@@ -348,9 +348,9 @@ export default function ChartAnalyzer({ onSaved, onPatternClick }: { onSaved?: (
     } finally { setLoading(false); }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!result) return;
-    saveEntry({
+    await saveEntry({
       id: Date.now().toString(), date: new Date().toISOString(),
       asset: result.asset, timeframe: result.timeframe,
       direction: result.direction, confidence: result.confidence,
@@ -362,6 +362,9 @@ export default function ChartAnalyzer({ onSaved, onPatternClick }: { onSaved?: (
       outcome: "OPEN", notes: "",
       capital: capital ? parseFloat(capital) : undefined,
       chartPreview: main.preview ?? undefined,
+      chartPreviewHtf: htf.preview ?? undefined,
+      chartPreviewLtf: ltf.preview ?? undefined,
+      botCorrect: null,
     } as JournalEntry);
     setSaved(true); onSaved?.();
   };
