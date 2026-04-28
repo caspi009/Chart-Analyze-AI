@@ -89,9 +89,11 @@ export async function getEntries(): Promise<JournalEntry[]> {
 }
 
 export async function saveEntry(entry: JournalEntry): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-  await supabase.from("journal_entries").upsert(toRow(entry, user.id));
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError) throw new Error("Not logged in: " + authError.message);
+  if (!user) throw new Error("Not logged in");
+  const { error } = await supabase.from("journal_entries").upsert(toRow(entry, user.id));
+  if (error) throw new Error("Save failed: " + error.message);
 }
 
 export async function updateOutcome(id: string, outcome: Outcome, notes?: string, profitLoss?: number | null): Promise<void> {

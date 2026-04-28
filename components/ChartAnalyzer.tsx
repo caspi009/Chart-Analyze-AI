@@ -352,6 +352,7 @@ export default function ChartAnalyzer({ onSaved, onPatternClick }: { onSaved?: (
 
   const handleSave = async () => {
     if (!result) return;
+    try {
     await saveEntry({
       id: Date.now().toString(), date: new Date().toISOString(),
       asset: result.asset, timeframe: result.timeframe,
@@ -369,6 +370,9 @@ export default function ChartAnalyzer({ onSaved, onPatternClick }: { onSaved?: (
       botCorrect: null,
     } as JournalEntry);
     setSaved(true); onSaved?.();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Save failed");
+    }
   };
 
   const d = result ? DIR[result.direction] : null;
