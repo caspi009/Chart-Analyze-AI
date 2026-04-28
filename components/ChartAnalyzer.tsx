@@ -311,6 +311,7 @@ export default function ChartAnalyzer({ onSaved, onPatternClick }: { onSaved?: (
 
   const [capital,         setCapital]        = useState("");
   const [context,         setContext]        = useState("");
+  const [currentPrice,    setCurrentPrice]   = useState("");
   const [loading,         setLoading]        = useState(false);
   const [result,          setResult]         = useState<AnalysisData | null>(null);
   const [error,           setError]          = useState<string | null>(null);
@@ -337,8 +338,9 @@ export default function ChartAnalyzer({ onSaved, onPatternClick }: { onSaved?: (
     fd.append("chart1", main.file);
     if (htf.file) fd.append("chart2", htf.file);
     if (ltf.file) fd.append("chart3", ltf.file);
-    if (capital)        fd.append("capital", capital);
-    if (context.trim()) fd.append("context", context.trim());
+    if (capital)             fd.append("capital", capital);
+    if (context.trim())      fd.append("context", context.trim());
+    if (currentPrice.trim()) fd.append("currentPrice", currentPrice.trim());
     try {
       const res = await fetch("/api/analyze", { method: "POST", body: fd });
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || "Analysis failed"); }
@@ -443,13 +445,21 @@ export default function ChartAnalyzer({ onSaved, onPatternClick }: { onSaved?: (
 
           {/* Inputs */}
           <div className="space-y-3 text-sm">
-            <div>
-              <label className="block text-[10px] uppercase text-slate-500 mb-1 font-medium tracking-wider">Portfolio Balance</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
-                <input type="number" value={capital} onChange={(e) => setCapital(e.target.value)}
-                  placeholder="10,000"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-7 pr-3 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition tabnum" />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[10px] uppercase text-slate-500 mb-1 font-medium tracking-wider">Portfolio Balance</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
+                  <input type="number" value={capital} onChange={(e) => setCapital(e.target.value)}
+                    placeholder="10,000"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-7 pr-3 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition tabnum" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase text-slate-500 mb-1 font-medium tracking-wider">Current Price <span className="text-slate-700 normal-case tracking-normal">(optional)</span></label>
+                <input type="number" value={currentPrice} onChange={(e) => setCurrentPrice(e.target.value)}
+                  placeholder="78,400"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition tabnum" />
               </div>
             </div>
 

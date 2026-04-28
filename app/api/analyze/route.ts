@@ -3,7 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 const client = new Anthropic();
 
-function buildPrompt(numCharts: number, context?: string): string {
+function buildPrompt(numCharts: number, context?: string, currentPrice?: string): string {
+  const priceBlock = currentPrice?.trim()
+    ? `\nCurrent market price confirmed by the trader: ${currentPrice.trim()}. Use this exact price as the reference for all calculations — do NOT try to read the price from the chart axis.\n`
+    : "";
   const contextBlock = context?.trim()
     ? `\nAdditional market context provided by the trader: "${context.trim()}"\nFactor this into your analysis and risk recommendations.\n`
     : "";
@@ -17,7 +20,7 @@ Include "multiTimeframe" in your response.`
       : "";
 
   return `You are an expert technical analyst and risk manager with deep experience in all markets — crypto, forex, stocks, commodities.${multiTfBlock}
-${contextBlock}
+${priceBlock}${contextBlock}
 Analyze the provided chart(s) carefully and thoroughly.
 
 Return ONLY a valid JSON object. No markdown, no backticks, no text outside the JSON.
@@ -329,6 +332,7 @@ export async function POST(request: NextRequest) {
     const chart3 = formData.get("chart3") as File | null;
     const capital = formData.get("capital") as string | null;
     const context = formData.get("context") as string | null;
+    const currentPrice = formData.get("currentPrice") as string | null;
 
     if (!chart1) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
@@ -348,7 +352,7 @@ export async function POST(request: NextRequest) {
     const img3 = chart3 ? await fileToBase64(chart3) : null;
 
     const numCharts = [img1, img2, img3].filter(Boolean).length;
-    const prompt = buildPrompt(numCharts, context ?? undefined);
+    const prompt = buildPrompt(numCharts, context ?? undefined, currentPrice ?? undefined);
 
     type ImageBlock = {
       type: "image";
@@ -384,13 +388,13 @@ export async function POST(request: NextRequest) {
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 1600,
-      temperature: 0,
+      max_tokens: 12000,
+      thinking: { type: "enabled", budget_tokens: 8000 },
       messages: [{ role: "user", content }],
     });
 
     const rawText =
-      message.content[0].type === "text" ? message.content[0].text : "";
+      message.content.find((b) => b.type === "text")?.text ?? "";
     const cleaned = rawText
       .replace(/```json\n?/g, "")
       .replace(/```\n?/g, "")
